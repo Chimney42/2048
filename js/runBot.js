@@ -1,5 +1,5 @@
 const GameManager = require('./game_manager');
-
+const fs = require('fs');
 const game = new GameManager(4);
 
 // 0: up, 1: right, 2: down, 3: left
@@ -34,6 +34,8 @@ let getHighestTile = (cells) => {
     }
     return highestValue;
 };
+let gameStates = [];
+let output = 'cell_1,cell_2,cell_3,cell_4,cell_5,cell_6,cell_7,cell_8,cell_9,cell_10,cell_11,cell_12,cell_13,cell_14,cell_15,cell_16,direction,highestTile,hasWon\n';
 
 while(!game.isGameTerminated()) {
     let direction = getRandomDirection();
@@ -46,6 +48,13 @@ while(!game.isGameTerminated()) {
         highestTile: highestTile
     };
     console.log(dataPoint);
+    gameStates.push(dataPoint);
 
     game.move(direction);
 }
+let hasWon = getHighestTile(game.grid.cells) >= 1024 ? 1 : 0;
+
+gameStates.map((dataPoint) => {
+    output += dataPoint.boardState.join(',')+','+dataPoint.direction+','+dataPoint.highestTile+','+hasWon+'\n';
+});
+fs.writeFile("train.csv", output);
