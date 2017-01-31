@@ -1,8 +1,8 @@
-function GameManager(size, InputManager, Actuator, StorageManager) {
+function GameManager(size, inputManager, actuator, storageManager) {
   this.size           = size; // Size of the grid
-  this.inputManager   = new InputManager;
-  this.storageManager = new StorageManager;
-  this.actuator       = new Actuator;
+  this.inputManager   = inputManager;
+  this.storageManager = storageManager;
+  this.actuator       = actuator;
 
   this.startTiles     = 2;
 
@@ -270,3 +270,5 @@ GameManager.prototype.tileMatchesAvailable = function () {
 GameManager.prototype.positionsEqual = function (first, second) {
   return first.x === second.x && first.y === second.y;
 };
+
+//module.exports = GameManager;

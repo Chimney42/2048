@@ -1,32 +1,17 @@
-window.fakeStorage = {
-  _data: {},
 
-  setItem: function (id, val) {
-    return this._data[id] = String(val);
-  },
-
-  getItem: function (id) {
-    return this._data.hasOwnProperty(id) ? this._data[id] : undefined;
-  },
-
-  removeItem: function (id) {
-    return delete this._data[id];
-  },
-
-  clear: function () {
-    return this._data = {};
-  }
-};
-
-function LocalStorageManager() {
+function LocalStorageManager(storage) {
   this.bestScoreKey     = "bestScore";
   this.gameStateKey     = "gameState";
 
   var supported = this.localStorageSupported();
-  this.storage = supported ? window.localStorage : window.fakeStorage;
+  this.storage = supported ? window.localStorage : storage;
 }
 
 LocalStorageManager.prototype.localStorageSupported = function () {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
   var testKey = "test";
   var storage = window.localStorage;
 
