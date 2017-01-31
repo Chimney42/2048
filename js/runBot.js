@@ -2,15 +2,50 @@ const GameManager = require('./game_manager');
 
 const game = new GameManager(4);
 
-console.log(game.isGameTerminated());
-
-console.log(game.grid.cells);
-
 // 0: up, 1: right, 2: down, 3: left
-game.move(2);
+let getRandomDirection = () =>  {
+    min = Math.ceil(0);
+    max = Math.floor(3);
+    return Math.floor(Math.random() * (max - min)) + min;
+};
 
-console.log(game.grid.cells);
+let serialize = (cells) => {
+    let serializedState = [];
+    for (let i = 0; i < cells.length; i++) {
+        for (let x = 0; x < cells[i].length; x++) {
+            if (cells[i][x] === null) {
+                serializedState.push(0)
+            } else {
+                serializedState.push(cells[i][x].value)
+            }
+        }
+    }
+    return serializedState;
+};
 
-game.move(1);
+let getHighestTile = (cells) => {
+    let highestValue = 0;
+    for (let i = 0; i < cells.length; i++) {
+        for (let x = 0; x < cells[i].length; x++) {
+            if (cells[i][x] && highestValue < cells[i][x].value) {
+                highestValue = cells[i][x].value;
+            }
+        }
+    }
+    return highestValue;
+};
 
-console.log(game.grid.cells);
+while(!game.isGameTerminated()) {
+    let direction = getRandomDirection();
+    let boardState = serialize(game.grid.cells);
+    let highestTile = getHighestTile(game.grid.cells);
+
+    let dataPoint = {
+        boardState: boardState,
+        direction: direction,
+        highestTile: highestTile
+    };
+    console.log(dataPoint);
+
+    game.move(direction);
+}
