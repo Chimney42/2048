@@ -92,7 +92,7 @@ GameManager.prototype.move = function (direction) {
 
   var vector     = this.getVector(direction);
   var traversals = this.buildTraversals(vector);
-  var moved      = false;
+  this.moved     = false;
 
   // Save the current tile positions and remove merger information
   this.prepareTiles();
@@ -128,13 +128,13 @@ GameManager.prototype.move = function (direction) {
         }
 
         if (!self.positionsEqual(cell, tile)) {
-          moved = true; // The tile moved from its original cell!
+          self.moved = true; // The tile moved from its original cell!
         }
       }
     });
   });
 
-  if (moved) {
+  if (this.moved) {
     this.addRandomTile();
 
     if (!this.movesAvailable()) {
