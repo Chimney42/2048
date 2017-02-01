@@ -33,34 +33,44 @@ const reduceCells = (acc, row) => acc.concat(row.reduce(reduceRow, []));
 const getHighestTile = (cells) => {
     return Math.max.apply([], cells.reduce(reduceCells, []));
 };
-let gameStates = [];
-let output = 'cell_1,cell_2,cell_3,cell_4,cell_5,cell_6,cell_7,cell_8,cell_9,cell_10,cell_11,cell_12,cell_13,cell_14,cell_15,cell_16,direction,highestTile,hasWon\n';
 
-while(!game.isGameTerminated()) {
-    let direction = getRandomDirection();
-    let boardState = serialize(game.grid.cells);
-    let highestTile = getHighestTile(game.grid.cells);
+let output = 'moveNo,cell_1,cell_2,cell_3,cell_4,cell_5,cell_6,cell_7,cell_8,cell_9,cell_10,cell_11,cell_12,cell_13,cell_14,cell_15,cell_16,direction,highestTile,hasWon\n';
+let games = [];
+for (let i = 0; i < 100; i++) {
+  let gameStates = [];
+  let entireGame = [];
+  let moveNo = 0;
+  while(!game.isGameTerminated()) {
+      let direction = getRandomDirection();
+      let boardState = serialize(game.grid.cells);
+      let highestTile = getHighestTile(game.grid.cells);
+      moveNo++;
 
-    let dataPoint = {
-        boardState: boardState,
-        direction: direction,
-        highestTile: highestTile
-    };
+      let dataPoint = {
+          boardState: boardState,
+          direction: direction,
+          highestTile: highestTile,
+          moveNo: moveNo
+      };
 
-    game.move(direction);
+      game.move(direction);
 
-    if (!game.moved) {
-        allowedDirections.splice(allowedDirections.indexOf(direction), 1);
-        console.log("BLACKLISTING DIR", direction);
-    } else {
-        allowedDirections = [0, 1, 2, 3];
-        console.log(dataPoint);
-        gameStates.push(dataPoint);
-    }
+      if (!game.moved) {
+          allowedDirections.splice(allowedDirections.indexOf(direction), 1);
+          console.log("BLACKLISTING DIR", direction);
+      } else {
+          allowedDirections = [0, 1, 2, 3];
+          console.log(dataPoint);
+          gameStates.push(dataPoint);
+      }
+  }
+  let hasWon = getHighestTile(game.grid.cells) >= 2048 ? 1 : 0;
+
+  entireGame = gameStates.map((dataPoint) => {
+      return dataPoint.moveNo+','+dataPoint.boardState.join(',')+','+dataPoint.direction+','+dataPoint.highestTile+','+hasWon;
+  });
+  games.push(entireGame.join('\n'));
+  game.restart();
 }
-let hasWon = getHighestTile(game.grid.cells) >= 1024 ? 1 : 0;
-
-gameStates.map((dataPoint) => {
-    output += dataPoint.boardState.join(',')+','+dataPoint.direction+','+dataPoint.highestTile+','+hasWon+'\n';
-});
+output += games.join('\n');
 fs.writeFile("train.csv", output);
