@@ -39,11 +39,10 @@ let games = [];
 for (let i = 0; i < 100; i++) {
   let gameStates = [];
   let entireGame = [];
-  let moveNo = 0;
+  let moveNo = 1;
   while(!game.isGameTerminated()) {
       let direction = getRandomDirection();
       let boardState = serialize(game.grid.cells);
-      moveNo++;
 
       let dataPoint = {
           boardState: boardState,
@@ -58,6 +57,7 @@ for (let i = 0; i < 100; i++) {
           console.log("BLACKLISTING DIR", direction);
       } else {
           allowedDirections = [0, 1, 2, 3];
+          moveNo++;
           dataPoint.highestTile = getHighestTile(game.grid.cells);
 
           console.log(dataPoint);
