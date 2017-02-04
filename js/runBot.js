@@ -26,51 +26,53 @@ const serialize = (cells) => {
     return serializedState;
 };
 
-const reduceRow = (acc, tile) => acc.concat(tile && tile.value || 0);
-
-const reduceCells = (acc, row) => acc.concat(row.reduce(reduceRow, []));
-
-const getHighestTile = (cells) => {
-    return Math.max.apply([], cells.reduce(reduceCells, []));
+const getRating = (boardState) => {
+  let count = boardState.filter(item => item > 0).length;
+  let sum = boardState.reduce((sum, item) => sum + item, 0);
+  return sum / count;
 };
 
-let output = 'moveNo,cell_1,cell_2,cell_3,cell_4,cell_5,cell_6,cell_7,cell_8,cell_9,cell_10,cell_11,cell_12,cell_13,cell_14,cell_15,cell_16,direction,highestTile,hasWon\n';
-let games = [];
-for (let i = 0; i < 100; i++) {
-  let gameStates = [];
+//fs.writeFileSync("train_first_iteration_simulate_moves.csv",
+//  'moveNo,cell_1,cell_2,cell_3,cell_4,cell_5,cell_6,cell_7,cell_8,cell_9,cell_10,cell_11,cell_12,cell_13,cell_14,cell_15,cell_16,direction,ratingIncreased\n'
+//);
+fs.writeFileSync('train_first_iteration_simulate_moves.json', '');
+
+for (let i = 0; i < 1; i++) {
   let entireGame = [];
   let moveNo = 1;
   while(!game.isGameTerminated()) {
-      let direction = getRandomDirection();
-      let boardState = serialize(game.grid.cells);
+    let oldState = JSON.parse(JSON.stringify(game.grid.serialize()));
+    rating = getRating(serialize(oldState.cells));
+    let moveTo = getRandomDirection();
 
-      let dataPoint = {
-          boardState: boardState,
-          direction: direction,
-          moveNo: moveNo
-      };
+    let dataPoint = {
+        boardState: serialize(game.grid.cells),
+        moveNo: moveNo
+    };
 
+    let moveRankings = allowedDirections.map((direction) => {
+      let ratingIncreased = 0;
       game.move(direction);
-
-      if (!game.moved) {
-          allowedDirections.splice(allowedDirections.indexOf(direction), 1);
-          console.log("BLACKLISTING DIR", direction);
-      } else {
-          allowedDirections = [0, 1, 2, 3];
-          moveNo++;
-          dataPoint.highestTile = getHighestTile(game.grid.cells);
-
-          console.log(dataPoint);
-          gameStates.push(dataPoint);
+      if (getRating(serialize(game.grid.cells)) > rating) {
+        ratingIncreased = 1;
+        moveTo = direction;
       }
-  }
-  let hasWon = getHighestTile(game.grid.cells) >= 2048 ? 1 : 0;
+      game.grid.cells = game.grid.fromState(oldState.cells);
+      return ratingIncreased;
+    });
 
-  entireGame = gameStates.map((dataPoint) => {
-      return dataPoint.moveNo+','+dataPoint.boardState.join(',')+','+dataPoint.direction+','+dataPoint.highestTile+','+hasWon;
-  });
-  games.push(entireGame.join('\n'));
+    entireGame.push({
+      moveNo : dataPoint.moveNo,
+      boardState : dataPoint.boardState,
+      moveRankings : moveRankings});
+    game.move(moveTo);
+    moveNo++;
+  };
+  //console.log(gameStates);
+  //entireGame = gameStates.map((dataPoint) => {
+  //    return dataPoint.moveNo+','+dataPoint.boardState.join(',')+','+dataPoint.direction+','+dataPoint.ratingIncreased;
+  //});
+  console.log(entireGame);
+  fs.appendFileSync('train_first_iteration_simulate_moves.json', JSON.stringify(entireGame));
   game.restart();
 }
-output += games.join('\n');
-fs.writeFile("train.csv", output);
