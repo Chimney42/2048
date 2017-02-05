@@ -1,5 +1,5 @@
 const fs = require('fs');
-const Promise = require('promise');
+const async = require('async');
 const nano = require('nano')('http://localhost:5984');
 const db = nano.use('training');
 const GameManager = require('./game_manager');
@@ -28,13 +28,6 @@ const serialize = (cells) => {
     return serializedState;
 };
 
-const persistToDatabase = (dataPoint) => {
-  db.insert(dataPoint, function(err, body) {
-    if (!err)
-      console.log(body);
-  });
-}
-
 const getRating = (boardState) => {
   let count = boardState.filter(item => item > 0).length;
   let sum = boardState.reduce((sum, item) => sum + item, 0);
@@ -43,7 +36,9 @@ const getRating = (boardState) => {
 
 for (let i = 0; i < 1; i++) {
   let moveNo = 1;
-  while(!game.isGameTerminated()) {
+  async.whilst(() => {
+    return !game.isGameTerminated()
+  }, (next) => {
     let oldState = JSON.parse(JSON.stringify(game.grid.serialize()));
     rating = getRating(serialize(oldState.cells));
     let moveTo = getRandomDirection();
@@ -52,7 +47,6 @@ for (let i = 0; i < 1; i++) {
         boardState: serialize(game.grid.cells),
         moveNo: moveNo
     };
-
     let moveRankings = allowedDirections.map((direction) => {
       let ratingIncreased = 0;
       game.move(direction);
@@ -67,9 +61,15 @@ for (let i = 0; i < 1; i++) {
 
     dataPoint.moveRankings = moveRankings;
     console.log(dataPoint);
-    persistToDatabase(dataPoint);
+
+    db.insert(dataPoint, function(err, body) {
+      if (err) throw err;
+      console.log(body);
+      next();
+    });
+
     game.move(moveTo);
     moveNo++;
-  };
+  });
   game.restart();
 }
