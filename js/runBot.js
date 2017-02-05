@@ -1,10 +1,12 @@
-const GameManager = require('./game_manager');
 const fs = require('fs');
+const Promise = require('promise');
+const nano = require('nano')('http://localhost:5984');
+const db = nano.use('training');
+const GameManager = require('./game_manager');
 const game = new GameManager(4);
-
-let allowedDirections = [0, 1, 2, 3];
-
 // 0: up, 1: right, 2: down, 3: left
+const allowedDirections = [0, 1, 2, 3];
+
 const getRandomDirection = () =>  {
     const min = 0;
     const max = allowedDirections.length - 1;
@@ -26,19 +28,20 @@ const serialize = (cells) => {
     return serializedState;
 };
 
+const persistToDatabase = (dataPoint) => {
+  db.insert(dataPoint, function(err, body) {
+    if (!err)
+      console.log(body);
+  });
+}
+
 const getRating = (boardState) => {
   let count = boardState.filter(item => item > 0).length;
   let sum = boardState.reduce((sum, item) => sum + item, 0);
   return sum / count;
 };
 
-//fs.writeFileSync("train_first_iteration_simulate_moves.csv",
-//  'moveNo,cell_1,cell_2,cell_3,cell_4,cell_5,cell_6,cell_7,cell_8,cell_9,cell_10,cell_11,cell_12,cell_13,cell_14,cell_15,cell_16,direction,ratingIncreased\n'
-//);
-fs.writeFileSync('train_first_iteration_simulate_moves.json', '');
-
 for (let i = 0; i < 1; i++) {
-  let entireGame = [];
   let moveNo = 1;
   while(!game.isGameTerminated()) {
     let oldState = JSON.parse(JSON.stringify(game.grid.serialize()));
@@ -61,18 +64,12 @@ for (let i = 0; i < 1; i++) {
       return ratingIncreased;
     });
 
-    entireGame.push({
-      moveNo : dataPoint.moveNo,
-      boardState : dataPoint.boardState,
-      moveRankings : moveRankings});
+
+    dataPoint.moveRankings = moveRankings;
+    console.log(dataPoint);
+    persistToDatabase(dataPoint);
     game.move(moveTo);
     moveNo++;
   };
-  //console.log(gameStates);
-  //entireGame = gameStates.map((dataPoint) => {
-  //    return dataPoint.moveNo+','+dataPoint.boardState.join(',')+','+dataPoint.direction+','+dataPoint.ratingIncreased;
-  //});
-  console.log(entireGame);
-  fs.appendFileSync('train_first_iteration_simulate_moves.json', JSON.stringify(entireGame));
   game.restart();
 }
