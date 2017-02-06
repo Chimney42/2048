@@ -1,10 +1,9 @@
-const fs = require('fs');
 const async = require('async');
 const nano = require('nano')('http://localhost:5984');
 const db = nano.use('training');
 const GameManager = require('./game_manager');
 const game = new GameManager(4);
-// 0: up, 1: right, 2: down, 3: left
+// 0: left, 1: down, 2: right, 3: up
 const allowedDirections = [0, 1, 2, 3];
 
 const getRandomDirection = () =>  {
