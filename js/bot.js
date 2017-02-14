@@ -16,18 +16,18 @@ class Bot {
         async.whilst(() => {
             return !this.game.isGameTerminated()
         }, (next) => {
-            let oldState = JSON.parse(JSON.stringify(this.game.grid.serialize()));
-            const rating = botHelper.getRating(serialize(oldState.cells));
+            const oldState = JSON.parse(JSON.stringify(this.game.grid.serialize()));
+            const rating = botHelper.getRating(botHelper.serialize(oldState.cells));
             let moveTo = botHelper.getRandomDirection();
 
             let dataPoint = {
-                boardState: serialize(oldState.cells),
+                boardState: botHelper.serialize(oldState.cells),
                 moveNo: this.moveNo
             };
             dataPoint.moveRankings = this.allowedDirections.map((direction) => {
                 let ratingIncreased = 0;
                 this.game.move(direction);
-                if (botHelper.getRating(serialize(this.game.grid.cells)) > rating) {
+                if (botHelper.getRating(botHelper.serialize(this.game.grid.cells)) > rating) {
                     ratingIncreased = 1;
                     moveTo = direction;
                 }
