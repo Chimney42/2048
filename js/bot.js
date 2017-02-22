@@ -33,9 +33,6 @@ const run = () => {
 
 const simulateAndRank = directions => {
     const stateBefore = helper.clone(game.grid.serialize().cells);
-    console.log(stateBefore);
-    const cellsBefore = stateBefore;
-    console.log(cellsBefore);
     return directions.map(d => {
         let ratingIncreased = 0;
         game.move(d);

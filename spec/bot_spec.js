@@ -44,14 +44,15 @@ describe("A bot", () => {
         expect(helper.calculateRating).toHaveBeenCalledWith(state);
     });
 
-    fit('should simulate the given moves and return the ratings', () => {
+    it('should simulate the given moves and return the ratings', () => {
         setup();
-        const directions = [1];
-        const beginCells = helper.clone(game.grid.cells);
+        const directions = [0, 1];
+        const beginCells = helper.clone(game.grid.serialize().cells);
         const rankings = bot._simulateAndRank(directions);
 
-        expect(game.grid.cells).toEqual(beginCells);
+        expect(game.grid.cells).toEqual(game.grid.fromState(beginCells));
         expect(game.move).toHaveBeenCalledWith(directions[0]);
+        expect(game.move).toHaveBeenCalledWith(directions[1]);
         expect(rankings).toEqual(jasmine.any(Array));
         expect(rankings.length).toBe(directions.length);
     })
