@@ -46,14 +46,19 @@ const calculateRating = boardState => {
 
 
 const isTerminated = () => game.isGameTerminated();
+const hasStateChanged = () => game.moved;
 const getBoardState = () => serialize(game.grid.cells);
 const getRating = () => calculateRating(serialize(game.grid.cells));
 const restart = () => {
     game.restart();
 };
+const moveTo = (direction) => {
+    game.move(direction);
+};
 const resetTo = state => {
     game.grid.cells = game.grid.fromState(deserialize(state));
 };
+
 
 
 module.exports = (_game) => {
@@ -68,6 +73,8 @@ module.exports = (_game) => {
         getBoardState : getBoardState,
         getRating : getRating,
         resetTo : resetTo,
-        restart : restart
+        restart : restart,
+        moveTo : moveTo,
+        hasStateChanged : hasStateChanged
     }
 };

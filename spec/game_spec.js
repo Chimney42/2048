@@ -42,4 +42,20 @@ describe('A game', () => {
         gameWrapper.resetTo(state);
         expect(gameWrapper.getBoardState()).toEqual(state);
     });
+
+    it('should make a move', () => {
+        const direction = 1;
+        spyOn(game, 'move');
+
+        gameWrapper.moveTo(direction);
+
+        expect(game.move).toHaveBeenCalledWith(direction)
+    });
+
+    it('should know whether state has changed', () => {
+        game.moved = false;
+
+        expect(gameWrapper.hasStateChanged()).toBe(false);
+
+    })
 });
