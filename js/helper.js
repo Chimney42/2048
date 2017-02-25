@@ -1,16 +1,5 @@
 let couch;
 
-const serialize = gameGrid => {
-    let boardState = [];
-    gameGrid.forEach(row => {
-        row.forEach(cell => {
-            const c = cell ? cell.value : 0;
-            boardState.push(c);
-        })
-    });
-    return boardState;
-};
-
 const clone = twoDimensionArr => {
     let clonedArr = [];
     twoDimensionArr.forEach(row => {
@@ -24,16 +13,6 @@ const clone = twoDimensionArr => {
         clonedArr.push(clonedRow);
     });
     return clonedArr;
-};
-
-const calculateRating = boardState => {
-    let count = 0;
-    const sum = boardState.reduce((acc, cell) => {
-        count += cell ? 1 : 0;
-        return acc + cell;
-    }, 0);
-
-    return sum/count;
 };
 
 const saveToCouch = dataObj => {
@@ -53,9 +32,7 @@ module.exports = _couch => {
     couch = _couch;
 
     return {
-        serialize : serialize,
         clone : clone,
-        calculateRating : calculateRating,
         saveToCouch : saveToCouch
     };
 };
