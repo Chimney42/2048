@@ -58,7 +58,6 @@ module.exports = (_game, _network, _helper) => {
     helper = _helper || require('./helper.js')();
 
     return {
-        run : run,
-        allowedDirections : allowedDirections
+        run : run
     };
 };
