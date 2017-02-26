@@ -1,0 +1,15 @@
+{
+  "_id": "_design/debug",
+  "views": {
+    "byMoveNo": {
+      "map": "function (doc) {\n  emit(doc.moveNo, doc);\n}"
+    },
+    "byRating": {
+      "map": "function (doc) {\n  var count = 0;\n    const sum = doc.boardState.reduce(function(acc, cell) {\n        count += cell ? 1 : 0;\n        return acc + cell;\n    }, 0);\n\n  emit(sum/count, doc);\n}"
+    },
+    "byHighestCell": {
+      "map": "function (doc) {\n  var highest = doc.boardState.reduce(function(acc, cell) {\n    if (cell > acc) {\n      return cell;\n    } else {\n      return acc;\n    }\n  }, 0);\n  emit(highest, doc);\n}"
+    }
+  },
+  "language": "javascript"
+}
