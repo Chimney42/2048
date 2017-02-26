@@ -37,7 +37,7 @@ describe('A game', () => {
     it('should reset game to given board state', () => {
         game.grid.cells = [[ null, { value: 2 }],
             [ { value: 2 }, null ]];
-        const state = [0, 2, 0, 0];
+        const state = [0, 2, 0, 4];
 
         gameWrapper.resetTo(state);
         expect(gameWrapper.getBoardState()).toEqual(state);

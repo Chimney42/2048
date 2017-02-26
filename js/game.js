@@ -22,7 +22,7 @@ const deserialize = boardState => {
             if (boardState[i]) {
                 tile = {
                     position : { x:x, y:y },
-                    value : boardState[x][y]
+                    value : boardState[i]
                 }
             }
             row.push(tile);
@@ -56,7 +56,8 @@ const moveTo = (direction) => {
     game.move(direction);
 };
 const resetTo = state => {
-    game.grid.cells = game.grid.fromState(deserialize(state));
+    const deseState = deserialize(state);
+    game.grid.cells = game.grid.fromState(deseState);
 };
 
 

@@ -6,30 +6,45 @@ const allDirections = [0, 1, 2, 3];
 let allowedDirections;
 let moveNo;
 
-const run = () => {
-    allowedDirections = allDirections.slice();
-    moveNo = 1;
-    async.whilst(() => {
-        return !game.isTerminated();
-    }, next => {
-        const dataPoint = generateDatapoint();
-        dataPoint.moveRatings = allDirections.map(simulateAndRate);
+const run = _iterations => {
+    const iterations = _iterations || 1;
 
-        const direction = network.getRandomDirection(allowedDirections);
-        game.moveTo(direction);
+    const runGame = function(i) {
+        allowedDirections = allDirections.slice();
+        moveNo = 1;
 
-        if (!game.hasStateChanged()) {
-            allowedDirections.splice(allowedDirections.indexOf(direction), 1);
-        } else {
-            allowedDirections = allDirections.slice();
+        if (i===0) {
+            return;
         }
+        i--;
 
-        helper.saveToCouch(dataPoint)
-            .then(() => {
-                next();
-            });
-    });
-    game.restart();
+        async.whilst(() => {
+            return !game.isTerminated();
+        }, next => {
+            const dataPoint = generateDatapoint();
+            dataPoint.moveRatings = allDirections.map(simulateAndRate);
+
+            const direction = network.getRandomDirection(allowedDirections);
+            game.moveTo(direction);
+
+            if (!game.hasStateChanged()) {
+                allowedDirections.splice(allowedDirections.indexOf(direction), 1);
+            } else {
+                allowedDirections = allDirections.slice();
+            }
+            helper.saveToCouch(dataPoint)
+                .then(() => {
+                    console.log('saved datapoint', dataPoint);
+                    moveNo++;
+                    next();
+                });
+        }, () => {
+            game.restart();
+            runGame(i);
+        });
+    };
+
+    runGame(iterations);
 };
 
 const generateDatapoint = () => {
@@ -53,7 +68,7 @@ const simulateAndRate = direction => {
 
 
 module.exports = (_game, _network, _helper) => {
-    game = _game || require('./game.js');
+    game = _game || require('./game.js')();
     network = _network || require('./network.js');
     helper = _helper || require('./helper.js')();
 
