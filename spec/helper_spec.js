@@ -15,7 +15,7 @@ describe('A helper', () => {
         expect(clonedArr[1][0]).not.toBe(obj);
     });
 
-    it('should save to couch and return a promise', () => {
+    it('should save to trainingCouch and return a promise', () => {
         const doc = {1 : '2'};
 
         const promise = helper.saveToCouch(doc);

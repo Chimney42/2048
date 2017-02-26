@@ -9,6 +9,7 @@ describe("A bot", () => {
         spyOn(game, 'getBoardState');
         spyOn(game, 'moveTo');
         spyOn(game, 'resetTo');
+        spyOn(network, 'getTrainedDirection');
     };
 
     it('should restart if game is terminated without doing anything else', () => {
@@ -46,13 +47,13 @@ describe("A bot", () => {
     it('should make an actual move with a random direction', () => {
         setup();
         const direction = 1;
-        spyOn(network, 'getRandomDirection').and.returnValue(direction);
+        network.getTrainedDirection.and.returnValue(direction);
 
         bot.run();
         expect(game.moveTo.calls.argsFor(4)).toEqual([direction]);
     });
 
-    it('should save the datapoint to couch', () => {
+    it('should save the datapoint to trainingCouch', () => {
         setup();
         const boardState = [0, 2, 0, 0];
         const moveNo = 1;

@@ -1,4 +1,6 @@
-let couch;
+let nano;
+let trainingCouch;
+let networkCouch;
 
 const clone = twoDimensionArr => {
     let clonedArr = [];
@@ -17,22 +19,34 @@ const clone = twoDimensionArr => {
 
 const saveToCouch = dataObj => {
     return new Promise((resolve, reject) => {
-        couch.insert(dataObj, (err, body) => {
+        trainingCouch.insert(dataObj, (err, body) => {
             if (err) reject(err);
             resolve(body);
         });
     });
 };
 
+const loadFromCouch = (dbName, docId) => {
+    const db = nano.use(dbName);
+
+    return new Promise((resolve, reject) => {
+        db.get(docId, (err, body) => {
+            if(err) reject(err);
+            resolve(body);
+        })
+    });
+};
+
 module.exports = _couch => {
     if (!_couch) {
-        const nano = require('nano')('http://localhost:5984');
+        nano = require('nano')('http://localhost:5984');
         _couch = nano.use('trainingseconditeration');
     }
-    couch = _couch;
+    trainingCouch = _couch;
 
     return {
         clone : clone,
-        saveToCouch : saveToCouch
+        saveToCouch : saveToCouch,
+        loadFromCouch :  loadFromCouch
     };
 };

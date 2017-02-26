@@ -1,4 +1,6 @@
+const helper = require('./helper.js')();
 let network;
+
 
 const getRandomDirection = allowedDirections => {
     const min = 0;
@@ -24,7 +26,16 @@ const getTrainedDirection = (dataPoint, allowedDirections) => {
 };
 
 module.exports = (_network) => {
-    network = _network;
+    if(!_network) {
+        const synaptic = require('synaptic');
+        const Network = synaptic.Network;
+        helper.loadFromCouch('network', 'firstIteration').
+            then(networkJSON => {
+                network = Network.fromJSON(networkJSON);
+        })
+    } else {
+        network = _network;
+    }
 
     return {
         getRandomDirection : getRandomDirection,

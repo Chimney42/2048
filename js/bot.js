@@ -24,7 +24,7 @@ const run = _iterations => {
             const dataPoint = generateDatapoint();
             dataPoint.moveRatings = allDirections.map(simulateAndRate);
 
-            const direction = network.getRandomDirection(allowedDirections);
+            const direction = network.getTrainedDirection(dataPoint, allowedDirections);
             game.moveTo(direction);
 
             if (!game.hasStateChanged()) {
@@ -68,8 +68,8 @@ const simulateAndRate = direction => {
 
 
 module.exports = (_game, _network, _helper) => {
+    network = _network || require('./network.js')();
     game = _game || require('./game.js')();
-    network = _network || require('./network.js');
     helper = _helper || require('./helper.js')();
 
     return {
