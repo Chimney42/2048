@@ -1,4 +1,4 @@
-const network = require('../js/network.js');
+const network = require('../js/network.js')();
 const helper = require('../js/helper.js')();
 const game = require('../js/game.js')();
 const bot = require('../js/bot.js')(game, network, helper);

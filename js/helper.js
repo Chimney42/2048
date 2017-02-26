@@ -27,7 +27,7 @@ const saveToCouch = dataObj => {
 module.exports = _couch => {
     if (!_couch) {
         const nano = require('nano')('http://localhost:5984');
-        _couch = nano.use('training');
+        _couch = nano.use('trainingseconditeration');
     }
     couch = _couch;
 

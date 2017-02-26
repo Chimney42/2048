@@ -1,3 +1,5 @@
+let network;
+
 const getRandomDirection = allowedDirections => {
     const min = 0;
     const max = allowedDirections.length - 1;
@@ -5,6 +7,27 @@ const getRandomDirection = allowedDirections => {
     return allowedDirections[val];
 };
 
-module.exports = {
-    getRandomDirection : getRandomDirection,
+const getTrainedDirection = (dataPoint, allowedDirections) => {
+    const activation = [dataPoint.moveNo].concat(dataPoint.boardState);
+    const predictions = network.activate(activation);
+
+    const predForAllwdDirs = allowedDirections.map(direction => predictions[direction]);
+    const highestProb = predForAllwdDirs.reduce((acc, prob) => {
+        if (prob > acc) {
+            return prob
+        } else {
+            return acc;
+        }
+    }, 0);
+    const index = predForAllwdDirs.indexOf(highestProb);
+    return allowedDirections[index];
+};
+
+module.exports = (_network) => {
+    network = _network;
+
+    return {
+        getRandomDirection : getRandomDirection,
+        getTrainedDirection : getTrainedDirection
+    };
 };
