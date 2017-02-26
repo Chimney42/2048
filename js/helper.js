@@ -40,7 +40,7 @@ const loadFromCouch = (dbName, docId) => {
 module.exports = _couch => {
     if (!_couch) {
         nano = require('nano')('http://localhost:5984');
-        _couch = nano.use('trainingseconditeration');
+        _couch = nano.use('training_seconditeration');
     }
     trainingCouch = _couch;
 

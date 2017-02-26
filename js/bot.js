@@ -67,7 +67,7 @@ const simulateAndRate = direction => {
 };
 
 
-module.exports = (_game, _network, _helper) => {
+module.exports = (_network, _game, _helper) => {
     network = _network || require('./network.js')();
     game = _game || require('./game.js')();
     helper = _helper || require('./helper.js')();
