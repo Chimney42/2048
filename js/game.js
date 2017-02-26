@@ -56,8 +56,7 @@ const moveTo = (direction) => {
     game.move(direction);
 };
 const resetTo = state => {
-    const deseState = deserialize(state);
-    game.grid.cells = game.grid.fromState(deseState);
+    game.grid.cells = game.grid.fromState(deserialize(state));
 };
 
 
