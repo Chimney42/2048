@@ -17,7 +17,7 @@
   <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui">
 </head>
 <body>
-  <div class="container">
+  <div class="container" style="position: relative;float: left;margin: 30px">
     <div class="heading">
       <h1 class="title">2048</h1>
       <div class="scores-container">
@@ -25,13 +25,12 @@
         <div class="best-container">0</div>
       </div>
     </div>
-
     <div class="above-game">
       <p class="game-intro">Join the numbers and get to the <strong>2048 tile!</strong></p>
       <a class="restart-button">New Game</a>
     </div>
-
     <div class="game-container">
+
       <div class="game-message">
         <p></p>
         <div class="lower">
@@ -74,10 +73,8 @@
     <div>
       <button id="startSim">start simulation</button>
       <button id="stopSim">stop simulation</button>
-    </div>
-    <div>
-      <div>Avg score last 10 games</div>
-      <div id="lastAvgScores"></div>
+      <button id="saveAgent">save agent</button>
+      <button id="loadAgent">load agent</button>
     </div>
     <p class="game-explanation">
       <strong class="important">How to play:</strong> Use your <strong>arrow keys</strong> to move the tiles. When two tiles with the same number touch, they <strong>merge into one!</strong>
@@ -91,7 +88,10 @@
     Created by <a href="http://gabrielecirulli.com" target="_blank">Gabriele Cirulli.</a> Based on <a href="https://itunes.apple.com/us/app/1024!/id823499224" target="_blank">1024 by Veewo Studio</a> and conceptually similar to <a href="http://asherv.com/threes/" target="_blank">Threes by Asher Vollmer.</a>
     </p>
   </div>
-
+<div id="charts" style="padding-top: 100px">
+    <div id="scoreChart" style="width:700px;height:300px;"></div>
+    <div id="moveChart" style="width:700px;height:300px;"></div>
+</div>
   <script src="js/bind_polyfill.js"></script>
   <script src="js/classlist_polyfill.js"></script>
   <script src="js/animframe_polyfill.js"></script>
@@ -104,6 +104,8 @@
   <script src="js/application.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
   <script type="text/javascript" src="js/machineLearning/rl.js"></script>
+  <script type="text/javascript" src="js/machineLearning/canvasjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/pouchdb/6.1.2/pouchdb.min.js"></script>
   <script src="js/machineLearning/agent.js"></script>
 </body>
 </html>
