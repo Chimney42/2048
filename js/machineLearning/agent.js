@@ -17,8 +17,7 @@ calculateAvg = (arr) => {
     const sum = arr.reduce((acc, val) => {
         return acc + val.y;
     }, 0);
-
-    return Math.floor(sum / arr.length);
+    return sum / arr.length;
 };
 const absoluteScores = [];
 const averageScores = [];
@@ -48,8 +47,6 @@ plotGameMetadata = () => {
 
 let rewardChart;
 const absoluteRewards = [];
-const averageRewards = [];
-let lastAvgReward = 0;
 
 plotMoveMetadata = (reward) => {
     absoluteRewards.push({
@@ -57,19 +54,8 @@ plotMoveMetadata = (reward) => {
         y: reward
     });
 
-    if (absoluteRewards.length > updateMetadataInterval) {
+    if (absoluteRewards.length > updateMetadataInterval * 5) {
         absoluteRewards.shift();
-    }
-
-    const rewardDiff = reward - lastAvgReward;
-    lastAvgReward = lastAvgReward + (rewardDiff / totalMoveCount);
-    averageRewards.push({
-        x: totalMoveCount,
-        y: lastAvgReward
-    });
-
-    if (averageRewards.length > updateMetadataInterval) {
-        averageRewards.shift();
     }
 
     rewardChart.render();
@@ -88,18 +74,21 @@ calculateHighestTile = () => {
         return val > acc ? val : acc;
     }, 0)
 };
+const endMoveCounts = [];
+let maxMoveCount = 0;
+const minMoveCount = 0;
+let highScore = 0;
 
-simulateMove = (action) => {
+normalize = (val, max, min) => (val - min) / (max - min);
+
+calculateReward = (action) => {
     const lastRating = calculateRating();
     simulateKeyPress(action);
     let reward = calculateRating() - lastRating;
-    if (gameManager.over == true) {
-        reward = reward * reward;
-        if (!gameManager.won) {
-            reward = reward * -1;
-        }
-    }
-
+    const moveCountFactor = normalize(moveCount, maxMoveCount, minMoveCount);
+    const scoreFactor = normalize(gameManager.score, gameManager.storageManager.getBestScore(), 0);
+    const factor = (moveCountFactor * scoreFactor);
+    reward = reward * factor;
     return reward;
 };
 
@@ -114,11 +103,9 @@ serializeState = () => {
     return boardState;
 };
 
-let gameCount = 0;
-let totalMoveCount = 0;
 const env = {};
 env.getNumStates = () => {
-    return 16;
+    return 17;
 };
 env.getMaxNumActions = () => {
     return 4;
@@ -128,30 +115,45 @@ let agent;
 const spec = {
     update : 'qlearn', // qlearn | sarsa
     gamma : 0.9, // discount factor, [0, 1)
-    epsilon : 0.9, // initial epsilon for epsilon-greedy policy, [0, 1)
-    alpha : 0.9, // value function learning rate
-    experience_add_every : 500, // number of time steps before we add another experience to replay memory
-    experience_size : 10000, // size of experience replay memory
-    learning_steps_per_iteration : 50
+    epsilon : 0.5, // initial epsilon for epsilon-greedy policy, [0, 1)
+    alpha : 0.1, // value function learning rate
+    experience_add_every : 5, // number of time steps before we add another experience to replay memory
+    experience_size : 50000, // size of experience replay memory
+    learning_steps_per_iteration : 100,
     //spec.tderror_clamp = 1.0; // for robustness
-    //spec.num_hidden_units = 100 // number of neurons in hidden layer
+    num_hidden_units : 256 // number of neurons in hidden layer
 };
+
+let gameCount = 0;
+let totalMoveCount = 0;
+let moveCount = 0;
+
 initiateLearning = () => {
 
     agent = agent || new RL.DQNAgent(env, spec);
 
     return setInterval(function () { // start the learning loop
         if (gameManager.over === false) {
+            moveCount++;
+            maxMoveCount = moveCount > maxMoveCount ? moveCount : maxMoveCount;
             totalMoveCount++;
-            let state = serializeState();
+            let state = [moveCount].concat(serializeState());
             const action = agent.act(state); // s is an integer, action is integer
-
-            const reward = simulateMove(action);
+            const reward = calculateReward(action);
             plotMoveMetadata(reward);
             agent.learn(reward); // the agent improves its Q,policy,model, etc.
         } else {
             gameCount++;
+            endMoveCounts.push(moveCount);
+            if (endMoveCounts.length > updateMetadataInterval) {
+                endMoveCounts.shift();
+            }
+            moveCount = 0;
             plotGameMetadata();
+            if (gameCount % 100 === 0) {
+                const epsilon = agent.epsilon;
+                agent.epsilon = epsilon / 2;
+            }
             gameManager.restart();
         }
 
@@ -191,13 +193,7 @@ $('#startSim').on('click', () => {
             showInLegend: true,
             name: "absolute",
             dataPoints: absoluteRewards
-        },
-            {
-                type: "line",
-                showInLegend: true,
-                name: "average",
-                dataPoints: averageRewards
-            }],
+        }],
     });
     rewardChart.render();
 
@@ -231,4 +227,9 @@ $('#loadAgent').on('click', () => {
     const document = db.get('fourthIteration');
     agent = agent || new RL.DQNAgent(env, spec);
     agent = agent.fromJSON(document);
+});
+
+$('#resetScore').on('click', () => {
+   gameManager.storageManager.setBestScore(0);
+   gameManager.actuate();
 });
