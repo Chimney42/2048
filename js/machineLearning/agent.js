@@ -15,21 +15,16 @@ calculateAvg = (arr) => {
     }
 
     const sum = arr.reduce((acc, val) => {
-        return acc + val;
+        return acc + val.y;
     }, 0);
 
     return Math.floor(sum / arr.length);
 };
 const absoluteScores = [];
 const averageScores = [];
-let lastAvgScore = 0;
 let scoreChart;
-let moveChart;
-const absoluteMoves = [];
-const averageMoves = [];
-let lastAvgMove = 0;
 
-plotMetadata = () => {
+plotGameMetadata = () => {
     absoluteScores.push({
         x: gameCount,
         y: gameManager.score
@@ -39,40 +34,45 @@ plotMetadata = () => {
         absoluteScores.shift();
     }
 
-    const scoreDiff = gameManager.score - lastAvgScore;
-    lastAvgScore = lastAvgScore + (scoreDiff / gameCount);
     averageScores.push({
         x: gameCount,
-        y: lastAvgScore
+        y: calculateAvg(absoluteScores)
     });
 
-    if(averageScores.length > updateMetadataInterval) {
+    if (averageScores.length > updateMetadataInterval) {
         averageScores.shift();
     }
 
     scoreChart.render();
-/*
-    absoluteMoves.push({
-        x: gameCount,
-        y: moveCount
+};
+
+let rewardChart;
+const absoluteRewards = [];
+const averageRewards = [];
+let lastAvgReward = 0;
+
+plotMoveMetadata = (reward) => {
+    absoluteRewards.push({
+        x: totalMoveCount,
+        y: reward
     });
 
-    if(absoluteMoves.length > updateMetadataInterval) {
-        absoluteMoves.shift();
+    if (absoluteRewards.length > updateMetadataInterval) {
+        absoluteRewards.shift();
     }
 
-    const moveDiff = moveCount - lastAvgMove;
-    lastAvgMove = lastAvgMove + (moveDiff / gameCount);
-    averageMoves.push({
-        x: gameCount,
-        y: lastAvgMove
+    const rewardDiff = reward - lastAvgReward;
+    lastAvgReward = lastAvgReward + (rewardDiff / totalMoveCount);
+    averageRewards.push({
+        x: totalMoveCount,
+        y: lastAvgReward
     });
 
-    if(averageMoves.length > updateMetadataInterval) {
-        averageMoves.shift();
+    if (averageRewards.length > updateMetadataInterval) {
+        averageRewards.shift();
     }
 
-    moveChart.render();*/
+    rewardChart.render();
 };
 
 calculateRating = () => {
@@ -82,13 +82,24 @@ calculateRating = () => {
     return sum / count;
 };
 
+calculateHighestTile = () => {
+    const state = serializeState();
+    return state.reduce((acc, val) => {
+        return val > acc ? val : acc;
+    }, 0)
+};
+
 simulateMove = (action) => {
     const lastRating = calculateRating();
     simulateKeyPress(action);
     let reward = calculateRating() - lastRating;
-    if (gameManager.won) {
+    if (gameManager.over == true) {
         reward = reward * reward;
+        if (!gameManager.won) {
+            reward = reward * -1;
+        }
     }
+
     return reward;
 };
 
@@ -104,7 +115,7 @@ serializeState = () => {
 };
 
 let gameCount = 0;
-let moveCount = 0;
+let totalMoveCount = 0;
 const env = {};
 env.getNumStates = () => {
     return 16;
@@ -112,47 +123,49 @@ env.getNumStates = () => {
 env.getMaxNumActions = () => {
     return 4;
 };
-let agent = new RL.DQNAgent(env);
-initiateLearning = () => {
+let agent;
 
-    const spec = {};
-    spec.update = 'qlearn'; // qlearn | sarsa
-    spec.gamma = 0.9; // discount factor, [0, 1)
-    spec.epsilon = 0.9; // initial epsilon for epsilon-greedy policy, [0, 1)
-    spec.alpha = 0.1; // value function learning rate
-    spec.experience_add_every = 20; // number of time steps before we add another experience to replay memory
-    spec.experience_size = 50000; // size of experience replay memory
-    spec.learning_steps_per_iteration = 50;
+const spec = {
+    update : 'qlearn', // qlearn | sarsa
+    gamma : 0.9, // discount factor, [0, 1)
+    epsilon : 0.9, // initial epsilon for epsilon-greedy policy, [0, 1)
+    alpha : 0.9, // value function learning rate
+    experience_add_every : 500, // number of time steps before we add another experience to replay memory
+    experience_size : 10000, // size of experience replay memory
+    learning_steps_per_iteration : 50
     //spec.tderror_clamp = 1.0; // for robustness
     //spec.num_hidden_units = 100 // number of neurons in hidden layer
+};
+initiateLearning = () => {
 
-    agent = new RL.DQNAgent(env, spec);
+    agent = agent || new RL.DQNAgent(env, spec);
 
     return setInterval(function () { // start the learning loop
         if (gameManager.over === false) {
-            moveCount++;
+            totalMoveCount++;
             let state = serializeState();
             const action = agent.act(state); // s is an integer, action is integer
 
             const reward = simulateMove(action);
+            plotMoveMetadata(reward);
             agent.learn(reward); // the agent improves its Q,policy,model, etc.
         } else {
             gameCount++;
-            plotMetadata();
-            moveCount = 0;
+            plotGameMetadata();
             gameManager.restart();
         }
 
     }, 0);
 };
 
-let db =  new PouchDB('http://localhost:5984/network');
+let db = new PouchDB('http://localhost:5984/network');
 let simulation;
 
 $('#startSim').on('click', () => {
+
     scoreChart = new CanvasJS.Chart("scoreChart", {
         title: {
-            text: "endscores per game"
+            text: "endscores"
         },
         data: [{
             type: "line",
@@ -160,35 +173,33 @@ $('#startSim').on('click', () => {
             name: "absolute",
             dataPoints: absoluteScores
         },
-        {
-            type: "line",
-            showInLegend: true,
-            name: "average",
-            dataPoints: averageScores
-        }],
+            {
+                type: "line",
+                showInLegend: true,
+                name: "average (last 100 games)",
+                dataPoints: averageScores
+            }],
     });
     scoreChart.render();
 
-   /* moveChart = new CanvasJS.Chart("moveChart", {
+    rewardChart = new CanvasJS.Chart("rewardChart", {
         title: {
-            text: "moves per game"
+            text: "reward"
         },
         data: [{
             type: "line",
             showInLegend: true,
             name: "absolute",
-            dataPoints: absoluteMoves
+            dataPoints: absoluteRewards
         },
             {
                 type: "line",
                 showInLegend: true,
                 name: "average",
-                dataPoints: averageMoves
+                dataPoints: averageRewards
             }],
     });
-    moveChart.render();*/
-
-
+    rewardChart.render();
 
 
     if (gameManager.over === false) {
@@ -207,8 +218,8 @@ $('#stopSim').on('click', () => {
 
 $('#saveAgent').on('click', () => {
     const document = agent.toJSON();
-    document._id = 'thirdIteration';
-    db.get(document._id).then(function(doc) {
+    document._id = 'fourthIteration';
+    db.get(document._id).then(function (doc) {
         document._rev = doc._rev;
         return db.put(document);
     }).catch(function (err) {
@@ -217,6 +228,7 @@ $('#saveAgent').on('click', () => {
 });
 
 $('#loadAgent').on('click', () => {
-    const document = db.get('thirdIteration');
+    const document = db.get('fourthIteration');
+    agent = agent || new RL.DQNAgent(env, spec);
     agent = agent.fromJSON(document);
 });
