@@ -17,9 +17,6 @@
   },
   "homepage": "https://github.com/Chimney42/2048#readme",
   "dependencies": {
-    "async": "^2.1.4",
-    "nano": "^6.2.0",
-    "synaptic": "^1.0.8"
   },
   "devDependencies": {
     "jasmine": "^2.5.3"
