@@ -73,6 +73,7 @@ const spec = {
 };
 
 let gameCount = 1;
+let moveCount = 1;
 
 initiateLearning = () => {
     agent = agent || new RL.DQNAgent(env, spec);
@@ -83,9 +84,12 @@ initiateLearning = () => {
             const action = agent.act(state); // s is an integer, action is integer
             simulateKeyPress(action);
             const reward = calculateReward(action);
-            logRewardMeasurement(gameCount, reward);
             agent.learn(reward); // the agent improves its Q,policy,model, etc.
+            logActionMeasurement(gameCount, reward, action);
+            moveCount++;
         } else {
+            logGameScoreMeasurement(gameCount, gameManager.score);
+            moveCount = 1;
             gameCount++;
             gameManager.restart();
         }
