@@ -61,40 +61,46 @@ env.getMaxNumActions = () => {
 let agent;
 
 const spec = {
-    update : 'qlearn', // qlearn | sarsa
-    gamma : 0.9, // discount factor, [0, 1)
-    epsilon : 0.15, // initial epsilon for epsilon-greedy policy, [0, 1)
-    alpha : 0.1, // value function learning rate
-    experience_add_every : 5, // number of time steps before we add another experience to replay memory
-    experience_size : 50000, // size of experience replay memory
-    learning_steps_per_iteration : 100,
+    update: 'qlearn', // qlearn | sarsa
+    gamma: 0.9, // discount factor, [0, 1)
+    epsilon: 0.15, // initial epsilon for epsilon-greedy policy, [0, 1)
+    alpha: 0.1, // value function learning rate
+    experience_add_every: 5, // number of time steps before we add another experience to replay memory
+    experience_size: 100000, // size of experience replay memory
+    learning_steps_per_iteration: 100,
     //spec.tderror_clamp = 1.0; // for robustness
-    num_hidden_units : 256 // number of neurons in hidden layer
+    num_hidden_units: 256 // number of neurons in hidden layer
 };
 
-let gameCount = 1;
+let gameCount = 0;
 let moveCount = 1;
+
+const move = (next) => {
+    if (gameManager.over === false) {
+        let state = serializeState();
+        const action = agent.act(state); // s is an integer, action is integer
+        simulateKeyPress(action);
+        const reward = calculateReward(action);
+        agent.learn(reward); // the agent improves its Q,policy,model, etc.
+        moveCount++;
+        logActionMeasurement(gameCount, reward, action)
+            .then(() => next());
+    } else {
+        moveCount = 1;
+        gameCount++;
+        const score = gameManager.score;
+        gameManager.restart();
+
+        logGameScoreMeasurement(gameCount, score)
+            .then(() => next());
+    }
+};
+
+let simulate = true;
 
 initiateLearning = () => {
     agent = agent || new RL.DQNAgent(env, spec);
-
-    return setInterval(function () { // start the learning loop
-        if (gameManager.over === false) {
-            let state = serializeState();
-            const action = agent.act(state); // s is an integer, action is integer
-            simulateKeyPress(action);
-            const reward = calculateReward(action);
-            agent.learn(reward); // the agent improves its Q,policy,model, etc.
-            logActionMeasurement(gameCount, reward, action);
-            moveCount++;
-        } else {
-            logGameScoreMeasurement(gameCount, gameManager.score);
-            moveCount = 1;
-            gameCount++;
-            gameManager.restart();
-        }
-
-    }, 0);
+    async.whilst(() => simulate, move, ()=>{})
 };
 
 let db = new PouchDB('http://localhost:5984/network');
@@ -111,7 +117,7 @@ $('#startSim').on('click', () => {
 
 
 $('#stopSim').on('click', () => {
-    clearInterval(simulation);
+    simulate = false;
 });
 
 $('#saveAgent').on('click', () => {
@@ -134,5 +140,5 @@ $('#loadAgent').on('click', () => {
 $('#resetScore').on('click', () => {
     gameManager.restart();
     gameManager.storageManager.setBestScore(0);
-   gameManager.actuate();
+    gameManager.actuate();
 });
