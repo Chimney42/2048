@@ -34,7 +34,7 @@ GameManager.prototype.isGameTerminated = function () {
 // Set up the game
 GameManager.prototype.setup = function () {
     var previousState = this.storageManager.getGameState();
-
+    this.merged         = 0;
     // Reload the game from a previous game if present
     if (previousState) {
         this.grid        = new Grid(previousState.grid.size,
@@ -141,6 +141,7 @@ GameManager.prototype.move = function (direction) {
 
     // Save the current tile positions and remove merger information
     this.prepareTiles();
+    self.merged = 0;
 
     // Traverse the grid in the right direction and move tiles
     traversals.x.forEach(function (x) {
@@ -154,6 +155,7 @@ GameManager.prototype.move = function (direction) {
 
                 // Only one merger per row traversal?
                 if (next && next.value === tile.value && !next.mergedFrom) {
+                    self.merged++;
                     var merged = new Tile(positions.next, tile.value * 2);
                     merged.mergedFrom = [tile, next];
 

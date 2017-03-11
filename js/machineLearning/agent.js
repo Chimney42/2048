@@ -34,6 +34,16 @@ calculateHighestTile = () => {
 };
 normalize = (val, max, min) => (val - min) / (max - min);
 
+let rewards = [];
+const calculateAverageReward = () => {
+    return rewards.reduce((acc, val) => acc + val, 0) / rewards.length;
+};
+
+const scores = [];
+const calculateAverageScores = () => {
+    return scores.reduce((acc, val) => acc + val, 0) / scores.length;
+};
+
 calculateReward = (action) => {
     const lastRating = calculateRating();
     simulateKeyPress(action);
@@ -62,9 +72,9 @@ let agent;
 
 const spec = {
     update: 'qlearn', // qlearn | sarsa
-    gamma: 0.9, // discount factor, [0, 1)
+    gamma: 0.5, // discount factor, [0, 1)
     epsilon: 0.15, // initial epsilon for epsilon-greedy policy, [0, 1)
-    alpha: 0.1, // value function learning rate
+    alpha: 0.02, // value function learning rte
     experience_add_every: 5, // number of time steps before we add another experience to replay memory
     experience_size: 100000, // size of experience replay memory
     learning_steps_per_iteration: 100,
@@ -72,7 +82,7 @@ const spec = {
     num_hidden_units: 256 // number of neurons in hidden layer
 };
 
-let gameCount = 0;
+let gameCount = 1;
 let moveCount = 1;
 
 const move = (next) => {
@@ -80,18 +90,28 @@ const move = (next) => {
         let state = serializeState();
         const action = agent.act(state); // s is an integer, action is integer
         simulateKeyPress(action);
-        const reward = calculateReward(action);
-        agent.learn(reward); // the agent improves its Q,policy,model, etc.
+
         moveCount++;
-        logActionMeasurement(gameCount, reward, action)
+
+        logActionMeasurement(gameCount, action)
             .then(() => next());
     } else {
+        const moveNo = moveCount;
         moveCount = 1;
-        gameCount++;
+        const gameNo = gameCount;
         const score = gameManager.score;
-        gameManager.restart();
+        scores.push(score);
+        if (scores.length > 100) {
+            scores.shift();
+        }
 
-        logGameScoreMeasurement(gameCount, score)
+        const reward = score - calculateAverageScores();
+        agent.learn(reward); // the agent improves its Q,policy,model, etc.
+
+        gameManager.restart();
+        gameCount++;
+
+        logGameMeasurement(gameNo, score, moveNo, reward)
             .then(() => next());
     }
 };
