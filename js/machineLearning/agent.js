@@ -105,7 +105,7 @@ const move = (next) => {
             scores.shift();
         }
 
-        const reward = score - calculateAverageScores();
+        const reward = calculateRating();
         agent.learn(reward); // the agent improves its Q,policy,model, etc.
 
         gameManager.restart();
@@ -120,11 +120,24 @@ let simulate = true;
 
 initiateLearning = () => {
     agent = agent || new RL.DQNAgent(env, spec);
-    async.whilst(() => simulate, move, ()=>{})
+    const saveInterval = setInterval(saveAgentToCouch, 1800000);
+    async.whilst(() => simulate, move, () => clearInterval(saveInterval));
+
 };
 
 let db = new PouchDB('http://localhost:5984/network');
 let simulation;
+
+const saveAgentToCouch = () => {
+    const document = agent.toJSON();
+    document._id = 'rating';
+    db.get(document._id).then(function (doc) {
+        document._rev = doc._rev;
+        return db.put(document);
+    }).catch(function (err) {
+        db.put(document);
+    });
+}
 
 $('#startSim').on('click', () => {
     if (gameManager.over === false) {
@@ -141,14 +154,7 @@ $('#stopSim').on('click', () => {
 });
 
 $('#saveAgent').on('click', () => {
-    const document = agent.toJSON();
-    document._id = 'fourthIteration';
-    db.get(document._id).then(function (doc) {
-        document._rev = doc._rev;
-        return db.put(document);
-    }).catch(function (err) {
-        db.put(document);
-    });
+    saveAgentToCouch();
 });
 
 $('#loadAgent').on('click', () => {

@@ -1,4 +1,4 @@
-const dbName = 'third_iteration';
+const dbName = 'rating';
 const urlBase = 'http://localhost:8086/';
 
 const writeToInflux = (dataPoint) => {
