@@ -1,4 +1,4 @@
-const dbName = 'rating';
+const dbName = 'ratingGameEnd';
 const urlBase = 'http://localhost:8086/';
 
 const writeToInflux = (dataPoint) => {
@@ -18,7 +18,7 @@ const logGameMeasurement = (gameCount, score, moveCount, reward) => {
 
 };
 
-const logActionMeasurement = (gameCount, action) => {
+const logActionMeasurement = (gameCount, action     ) => {
     return new Promise((resolve, reject) => {
         const dataPoint = 'action,gameCount='+gameCount+',direction='+action+' value=1';
         writeToInflux(dataPoint)

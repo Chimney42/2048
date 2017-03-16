@@ -130,7 +130,7 @@ let simulation;
 
 const saveAgentToCouch = () => {
     const document = agent.toJSON();
-    document._id = 'rating';
+    document._id = 'ratingGameEnd';
     db.get(document._id).then(function (doc) {
         document._rev = doc._rev;
         return db.put(document);
@@ -158,7 +158,7 @@ $('#saveAgent').on('click', () => {
 });
 
 $('#loadAgent').on('click', () => {
-    const document = db.get('fourthIteration');
+    const document = db.get('ratingGameEnd');
     agent = agent || new RL.DQNAgent(env, spec);
     agent = agent.fromJSON(document);
 });
