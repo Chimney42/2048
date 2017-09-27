@@ -1,4 +1,4 @@
-const dbName = 'decayEpsilonRatSco';
+const dbName = 'codetalks';
 const urlBase = 'http://localhost:8086/';
 
 const writeToInflux = (dataPoint) => {
@@ -9,18 +9,18 @@ const writeToInflux = (dataPoint) => {
     });
 };
 
-const logGameMeasurement = (gameCount, reward, averageRewards, rating, averageRatings, score, averageScores, moveCount, averageMoves) => {
+const logGameMeasurement = (gameCount, reward, score, moveCount) => {
     return new Promise((resolve, reject) => {
-        const dataPoint = 'game,gameCount='+gameCount+' reward='+reward+',averageReward='+averageRewards+',rating='+rating+',averageRating='+averageRatings+',score='+score+',averageScore='+averageScores+',moveCount='+moveCount+',averageMove='+averageMoves;
+        const dataPoint = 'game,gameCount='+gameCount+' reward='+reward+',score='+score+',moveCount='+moveCount;
         writeToInflux(dataPoint)
             .then(resolve);
     });
 
 };
 
-const logActionMeasurement = (gameCount, action) => {
+const logActionMeasurement = (gameCount, action, reward) => {
     return new Promise((resolve, reject) => {
-        const dataPoint = 'action,gameCount='+gameCount+',direction='+action+' value=1';
+        const dataPoint = 'action,gameCount='+gameCount+',direction='+action+' reward='+reward;
         writeToInflux(dataPoint)
             .then(resolve);
     });

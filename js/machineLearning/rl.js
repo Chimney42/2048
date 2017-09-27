@@ -1006,6 +1006,8 @@ var RL = {};
             this.net = {};
             this.net.W1 = new R.RandMat(this.nh, this.ns, 0, 0.01);
             this.net.b1 = new R.Mat(this.nh, 1, 0, 0.01);
+            this.net.W11 = new R.RandMat(this.nh, this.nh, 0, 0.01);
+            this.net.b11 = new R.Mat(this.nh, 1, 0, 0.01);
             this.net.W2 = new R.RandMat(this.na, this.nh, 0, 0.01);
             this.net.b2 = new R.Mat(this.na, 1, 0, 0.01);
 
@@ -1042,7 +1044,9 @@ var RL = {};
             var G = new R.Graph(needs_backprop);
             var a1mat = G.add(G.mul(net.W1, s), net.b1);
             var h1mat = G.tanh(a1mat);
-            var a2mat = G.add(G.mul(net.W2, h1mat), net.b2);
+            var a11mat = G.add(G.mul(net.W11, h1mat), net.b11);
+            var h11mat = G.tanh(a11mat);
+            var a2mat = G.add(G.mul(net.W2, h11mat), net.b2);
             this.lastG = G; // back this up. Kind of hacky isn't it
             return a2mat;
         },

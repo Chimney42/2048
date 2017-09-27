@@ -83,10 +83,10 @@ let agent;
 const spec = {
     update: 'qlearn', // qlearn | sarsa
     gamma: 0.5, // discount factor, [0, 1)
-    epsilon: 0.2, // initial epsilon for epsilon-greedy policy, [0, 1)
+    epsilon: 0.25, // initial epsilon for epsilon-greedy policy, [0, 1)
     alpha: 0.02, // value function learning rte
-    experience_add_every: 5, // number of time steps before we add another experience to replay memory
-    experience_size: 100000, // size of experience replay memory
+    experience_add_every: 1, // number of time steps before we add another experience to replay memory
+    experience_size: 1000, // size of experience replay memory
     learning_steps_per_iteration: 100,
     //tderror_clamp : 1.0; // for robustness
     num_hidden_units: 256 // number of neurons in hidden layer
@@ -97,58 +97,62 @@ let moveCount = 1;
 
 const move = (next) => {
     if (gameManager.over === false) {
+        const score = gameManager.score;
         let state = serializeState();
         const action = agent.act(state); // s is an integer, action is integer
         simulateKeyPress(action);
 
         moveCount++;
+        //const reward = gameManager.score - score;
+        //rewards.push(reward);
+        //agent.learn(reward); // the agent improves its Q,policy,model, etc.
 
-        setTimeout(next, 0)
+        //logActionMeasurement(gameCount, action, reward)
+        //    .then(() => next());
+        setTimeout(next, 10)
     } else {
         const moveNo = moveCount;
         moveCount = 1;
-
-        moves.push(moveNo);
-        if (moves.length > 100) {
-            moves.shift();
-        }
-        const averageMoves = calculateAverageMoves();
+        //moves.push(moveNo);
+        //if (moves.length > 100) {
+        //    moves.shift();
+        //}
 
         const score = gameManager.score;
         scores.push(score);
         if (scores.length > 100) {
             scores.shift();
         }
-        const averageScores = calculateAverageScores();
 
         const rating = calculateRating();
         ratings.push(rating);
         if(ratings.length > 100) {
             ratings.shift();
         }
-        const averageRatings = calculateAverageRatings();
 
-        const reward = (rating / averageRatings) * (score / averageScores);
-        rewards.push(reward);
-        if(rewards.length > 100) {
-            rewards.shift();
-        }
-        const averageRewards = calculateAverageRewards();
+        //const averageRewards = calculateAverageRewards();
+        //rewards = [];
+        const reward = score;
+        //rewards.push(reward);
+        //if(rewards.length > 100) {
+        //    rewards.shift();
+        //}
 
         agent.learn(reward); // the agent improves its Q,policy,model, etc.
 
         gameManager.restart();
         const gameNo = gameCount;
-        if (gameCount % 1000 === 0) {
-            console.log(agent.epsilon);
+        if (gameCount % 10000 === 0) {
+            console.log('epsilon', agent.epsilon);
             agent.epsilon = agent.epsilon - ((agent.epsilon - minEpsilon) / 2);
         }
         gameCount++;
-        setTimeout(next, 0);
+
         console.log('score', score);
-        console.log('avgScore', averageScores);
-        //logGameMeasurement(gameNo, reward, averageRewards, rating, averageRatings, score, averageScores, moveNo, averageMoves)
-            //.then(() => next());
+        console.log('avgScore', calculateAverageScores());
+        logGameMeasurement(gameNo, reward, score, moveNo)
+            .then(() => next());
+        //setTimeout(next, 200)
     }
 };
 
@@ -156,8 +160,7 @@ let simulate = true;
 
 initiateLearning = () => {
     agent = agent || new RL.DQNAgent(env, spec);
-    const saveInterval = setInterval(saveAgentToCouch, 1800000);
-    async.whilst(() => simulate, move, () => clearInterval(saveInterval));
+    async.whilst(() => simulate, move);
 
 };
 
@@ -166,15 +169,15 @@ let simulation;
 
 const saveAgentToCouch = () => {
     const document = agent.toJSON();
-    document._id = 'jsunconf';
+    document._id = 'twoLayersDecayScoreGame';
     db.get(document._id).then(function (doc) {
         document._rev = doc._rev;
         return db.put(document);
     }).catch(function (err) {
         console.log(err);
         db.put(document);
-    });
-}
+    }).catch(console.log);
+};
 
 $('#startSim').on('click', () => {
     if (gameManager.over === false) {
@@ -195,7 +198,7 @@ $('#saveAgent').on('click', () => {
 });
 
 $('#loadAgent').on('click', () => {
-    const document = db.get('decayEpsilonRatSco');
+    const document = db.get('twoLayersDecayScoreGame');
     agent = agent || new RL.DQNAgent(env, spec);
     agent = agent.fromJSON(document);
 });
